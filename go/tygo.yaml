@@ -1,0 +1,13 @@
+packages:
+  - path: "cstft/go/models"
+    type_mappings:
+      # Map Go int64 to TypeScript number
+      int64: "number"
+      # Map Go int16 to TypeScript number
+      int16: "number"
+      # Map any to unknown (safer than any in TS)
+      any: "unknown"
+    output_path: "../client/src/types/generated.ts"
+    # Optionally exclude specific types if needed
+    # exclude_type_patterns:
+    #   - "^Internal.*"
