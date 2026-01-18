@@ -1,57 +1,42 @@
-import React, { useRef, useState } from "react";
-import type { ServerMessage } from "./types/serverMessages";
+import { useState } from "react";
 import Game from "./components/Game/Map";
-import type { PlayerData } from "./types/types";
+import { WebsocketConnection } from "./websocket/websocket";
+import { useGameState } from "./hooks/gameState";
+import { MessageTypeReadyStatus } from "../../types/generated";
 
 const Home = () => {
-  const [status, setStatus] = useState<
-    "disconnected" | "connecting" | "connected"
-  >("disconnected");
 
   const [readyStatus, setReadyStatus] = useState(false);
 
-  const [lobbyData, setLobbyData] = useState<PlayerData[]>([]);
-  const [gameStage, setGameStage] = useState("lobby")
-
-  const [log, setLog] = useState<string[]>([]);
   const [playerName, setPlayerName] = useState("");
-  const wsRef = useRef<WebSocket | null>(null);
 
-  const connect = () => {
-    setStatus("connecting");
-    const url = import.meta.env.VITE_WS_URL ?? "ws://localhost:8080/ws";
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const onMessage = (evt: MessageEvent<any>) => {
+  //   const msg: ServerMessage = JSON.parse(evt.data);
+  //   switch (msg.type) {
+  //     case "joined":
+  //       console.log(msg.payload.playerId);
+  //       setLog((l) => [`Joined as Player ${msg.payload.playerId}`, ...l]);
+  //       break;
+  //     case "lobbyData":
+  //       setLobbyData(msg.payload.players);
+  //       break;
+  //     case "gameStage":
+  //       setGameStage(msg.payload.stage);
+  //       console.log("game stage:", gameStage);
+  //       break;
+  //     case "error":
+  //       setLog((l) => [String(msg.payload?.message ?? "error"), ...l]);
+  //       break;
+  //   }
+  // };
 
-    ws.onopen = () => {
-      setStatus("connected");
-      // Send join as first message
-      const join = { type: "join", payload: { playerName } };
-      ws.send(JSON.stringify(join));
-    };
-    ws.onclose = () => setStatus("disconnected");
-    ws.onerror = () => setStatus("disconnected");
+  const {lobbyData, gameStage, onMessage} = useGameState()
 
-    ws.onmessage = (evt) => {
-      const msg: ServerMessage = JSON.parse(evt.data);
-      switch (msg.type) {
-        case "joined":
-          console.log(msg.payload.playerId);
-          setLog((l) => [`Joined as Player ${msg.payload.playerId}`, ...l]);
-          break;
-        case "lobbyData":
-          setLobbyData(msg.payload.players);
-          break;
-        case "gameStage":
-          setGameStage(msg.payload.stage)
-          console.log("game stage:", gameStage)
-          break;
-        case "error":
-          setLog((l) => [String(msg.payload?.message ?? "error"), ...l]);
-          break;
-      }
-    };
-  };
+  const { status, wsRef, connect } = WebsocketConnection({
+    playerName,
+    onMessage,
+  });
 
   const toggleReadyStatus = () => {
     const ws = wsRef.current;
@@ -59,8 +44,8 @@ const Home = () => {
     const newReadyState = !readyStatus;
     ws.send(
       JSON.stringify({
-        type: "readyStatus",
-        payload: { readyStatus: newReadyState },
+        type: MessageTypeReadyStatus,
+        payload: { status: newReadyState },
         timestamp: Date.now(),
       })
     );
@@ -96,16 +81,6 @@ const Home = () => {
             />
           </div>
         )}
-        <div className="bold">
-          Log:
-          <div className="flex flex-col">
-            {log.length === 0
-              ? "none"
-              : log.map((log) => {
-                  return <div>{log}</div>;
-                })}
-          </div>
-        </div>
         <div>
           Lobby
           {lobbyData.length > 0 ? (

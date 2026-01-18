@@ -53,7 +53,6 @@ func (gr *GameRoom) playersSummary() []map[string]any {
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
-	// upgrader := ws.NewUpgrader()
 
 	conn, err := ws.NewConn(w, r)
 	if err != nil {
@@ -69,20 +68,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-
-	// Join handshake must be first from client
-	// _, raw, err := conn.ReadMessage()
-	// if err != nil {
-	// 	log.Println("failed initial read:", err)
-	// 	conn.Close()
-	// 	return
-	// }
-	// var join models.Message
-	// if err := json.Unmarshal(raw, &join); err != nil || join.Type != "join" {
-	// 	log.Println("expected join message")
-	// 	conn.Close()
-	// 	return
-	// }
 
 	// Add player to room
 	room.mu.Lock()
@@ -134,6 +119,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			switch msg.Type {
+			case models.MessageTypeTest:
+
 			case "choose":
 				choice, _ := msg.Payload["choice"].(string) // "heads" or "tails"
 				if choice != "heads" && choice != "tails" {
@@ -175,8 +162,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 					room.takenChoices = make(map[string]string)
 				}
 				room.mu.Unlock()
-			case "readyStatus":
-				status, _ := msg.Payload["readyStatus"].(bool)
+			case models.MessageTypeReadyStatus:
+				status, _ := msg.Payload["status"].(bool)
 				room.mu.Lock()
 				room.players[player.ID].IsReady = status
 

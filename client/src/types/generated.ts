@@ -3,8 +3,11 @@
 //////////
 // source: models.go
 
+export const MessageTypeTest = "test";
+export const MessageTypeReadyStatus = "READY_STATUS";
+export type MessageType = typeof MessageTypeTest | typeof MessageTypeReadyStatus;
 export interface Message {
-  type: string;
+  type: MessageType;
   payload: { [key: string]: any};
   timestamp: number /* int64 */;
 }

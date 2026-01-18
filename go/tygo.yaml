@@ -1,5 +1,6 @@
 packages:
   - path: "cstft/go/models"
+    enum_style: "union"
     type_mappings:
       # Map Go int64 to TypeScript number
       int64: "number"

@@ -2,8 +2,15 @@ package models
 
 import "github.com/gorilla/websocket"
 
+type MessageType string
+
+const (
+	MessageTypeTest        MessageType = "test"
+	MessageTypeReadyStatus MessageType = "READY_STATUS"
+)
+
 type Message struct {
-	Type      string         `json:"type"`
+	Type      MessageType    `json:"type"`
 	Payload   map[string]any `json:"payload"`
 	Timestamp int64          `json:"timestamp"`
 }
