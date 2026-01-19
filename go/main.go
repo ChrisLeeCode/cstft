@@ -91,7 +91,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}})
 
 	// Broadcast lobby change
-	room.broadcast(models.Message{Type: "lobbyData", Payload: map[string]any{
+	room.broadcast(models.Message{Type: models.LobbyDataMessage, Payload: map[string]any{
 		"players": room.playersSummary(),
 	}})
 
@@ -162,13 +162,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 					room.takenChoices = make(map[string]string)
 				}
 				room.mu.Unlock()
-			case models.MessageTypeReadyStatus:
+			case models.ReadyStatusMessage:
 				status, _ := msg.Payload["status"].(bool)
 				room.mu.Lock()
 				room.players[player.ID].IsReady = status
 
 				// Broadcast lobby change
-				room.broadcast(models.Message{Type: "lobbyData", Payload: map[string]any{
+				room.broadcast(models.Message{Type: models.LobbyDataMessage, Payload: map[string]any{
 					"players": room.playersSummary(),
 				}})
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import Game from "./components/Game/Map";
 import { WebsocketConnection } from "./websocket/websocket";
 import { useGameState } from "./hooks/gameState";
-import { MessageTypeReadyStatus } from "../../types/generated";
+import { ReadyStatusMessage } from "../../types/generated";
 
 const Home = () => {
 
@@ -31,7 +31,7 @@ const Home = () => {
   //   }
   // };
 
-  const {lobbyData, gameStage, onMessage} = useGameState()
+  const {state: {lobbyData, gameStage}, onMessage} = useGameState()
 
   const { status, wsRef, connect } = WebsocketConnection({
     playerName,
@@ -44,7 +44,7 @@ const Home = () => {
     const newReadyState = !readyStatus;
     ws.send(
       JSON.stringify({
-        type: MessageTypeReadyStatus,
+        type: ReadyStatusMessage,
         payload: { status: newReadyState },
         timestamp: Date.now(),
       })

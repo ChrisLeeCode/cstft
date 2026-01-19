@@ -3,15 +3,17 @@
 //////////
 // source: models.go
 
-export const MessageTypeTest = "test";
-export const MessageTypeReadyStatus = "READY_STATUS";
-export type MessageType = typeof MessageTypeTest | typeof MessageTypeReadyStatus;
+export type MessageType = string;
+export const ReadyStatusMessageType: MessageType = "READY_STATUS";
+export const LobbyDataMessageType: MessageType = "LOBBY_DATA";
+export const GameStageMessageType: MessageType = "GAME_STAGE";
+export const JoinedMessageType: MessageType = "JOINED";
 export interface Message {
   type: MessageType;
   payload: { [key: string]: any};
   timestamp: number /* int64 */;
 }
-export interface Player {
+export interface PlayerData {
   id: string;
   name: string;
   isReady: boolean;
@@ -24,4 +26,36 @@ export interface Character {
 export interface Coordinate {
   x: number /* int16 */;
   y: number /* int16 */;
+}
+/**
+ * Server message types
+ */
+export interface BaseServerMessage {
+  timestamp: number /* int64 */;
+  type: MessageType;
+}
+export interface JoinedMessage {
+  timestamp: number /* int64 */;
+  type: 'joined';
+  payload: {
+    playerId: number /* int */;
+  };
+}
+export interface LobbyDataMessage {
+  BaseServerMessage: BaseServerMessage;
+  payload: {
+    players: PlayerData[];
+  };
+}
+export interface GameStageMessage {
+  BaseServerMessage: BaseServerMessage;
+  payload: {
+    stage: string;
+  };
+}
+export interface ErrorMessage {
+  BaseServerMessage: BaseServerMessage;
+  payload: {
+    message: string;
+  };
 }
