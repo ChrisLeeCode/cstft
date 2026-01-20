@@ -35,7 +35,7 @@ func JoinHandshake(conn *websocket.Conn) (models.Message, error) {
 		return joinMessage, err
 	}
 
-	if err := json.Unmarshal(raw, &joinMessage); err != nil || joinMessage.Type != "join" {
+	if err := json.Unmarshal(raw, &joinMessage); err != nil || joinMessage.Type != models.JoinMessageType {
 		log.Println("expected join message")
 		conn.Close()
 		return joinMessage, err

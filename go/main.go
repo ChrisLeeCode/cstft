@@ -37,11 +37,21 @@ func (gr *GameRoom) removeConn(conn *websocket.Conn) {
 	delete(gr.takenChoices, removedID)
 }
 
-func (gr *GameRoom) broadcast(msg models.Message) {
+// broadcast sends a message to all players. Caller must hold gr.mu lock.
+func (gr *GameRoom) broadcastLocked(msg models.Message) {
 	msg.Timestamp = time.Now().UnixMilli()
 	for _, p := range gr.players {
-		_ = p.Conn.WriteJSON(msg)
+		if err := p.Conn.WriteJSON(msg); err != nil {
+			log.Printf("Error broadcasting to player %s: %v", p.ID, err)
+		}
 	}
+}
+
+// broadcast sends a message to all players. Acquires lock internally.
+func (gr *GameRoom) broadcast(msg models.Message) {
+	gr.mu.Lock()
+	defer gr.mu.Unlock()
+	gr.broadcastLocked(msg)
 }
 
 func (gr *GameRoom) playersSummary() []map[string]any {
@@ -85,13 +95,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	room.mu.Unlock()
 
 	// Send joined acknowledgement
-	_ = conn.WriteJSON(models.Message{Type: "joined", Payload: map[string]any{
+	_ = conn.WriteJSON(models.Message{Type: models.JoinedMessageType, Payload: map[string]any{
 		"playerId": player.ID,
 		"players":  room.playersSummary(),
 	}})
 
 	// Broadcast lobby change
-	room.broadcast(models.Message{Type: models.LobbyDataMessage, Payload: map[string]any{
+	room.broadcastLocked(models.Message{Type: models.LobbyDataMessageType, Payload: map[string]any{
 		"players": room.playersSummary(),
 	}})
 
@@ -100,7 +110,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			room.removeConn(conn)
 			conn.Close()
-			room.broadcast(models.Message{Type: "waiting", Payload: map[string]any{
+			room.broadcast(models.Message{Type: models.WaitingMessageType, Payload: map[string]any{
 				"players": room.playersSummary(),
 				"message": "A player left. Waiting for another player...",
 			}})
@@ -119,12 +129,11 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			switch msg.Type {
-			case models.MessageTypeTest:
 
-			case "choose":
+			case models.ChooseMessageType:
 				choice, _ := msg.Payload["choice"].(string) // "heads" or "tails"
 				if choice != "heads" && choice != "tails" {
-					_ = conn.WriteJSON(models.Message{Type: "error", Payload: map[string]any{"message": "choice must be heads or tails"}})
+					_ = conn.WriteJSON(models.Message{Type: models.ErrorMessageType, Payload: map[string]any{"message": "choice must be heads or tails"}})
 					continue
 				}
 				room.mu.Lock()
@@ -132,13 +141,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				for pid, c := range room.takenChoices {
 					if c == choice && pid != player.ID {
 						room.mu.Unlock()
-						_ = conn.WriteJSON(models.Message{Type: "error", Payload: map[string]any{"message": "That side is already taken"}})
+						_ = conn.WriteJSON(models.Message{Type: models.ErrorMessageType, Payload: map[string]any{"message": "That side is already taken"}})
 						continue
 					}
 				}
 				room.takenChoices[player.ID] = choice
 				// Notify both players about taken choices
-				room.broadcast(models.Message{Type: "choice_update", Payload: map[string]any{"takenChoices": room.takenChoices}})
+				room.broadcastLocked(models.Message{Type: models.ChoiceUpdateMessageType, Payload: map[string]any{"takenChoices": room.takenChoices}})
 				// If both players have chosen, flip coin
 				if len(room.takenChoices) == 2 && len(room.players) == 2 {
 					flip := "heads"
@@ -153,7 +162,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 							break
 						}
 					}
-					room.broadcast(models.Message{Type: "result", Payload: map[string]any{
+					room.broadcastLocked(models.Message{Type: models.ResultMessageType, Payload: map[string]any{
 						"flip":           flip,
 						"winnerPlayerId": winnerID,
 						"takenChoices":   room.takenChoices,
@@ -162,13 +171,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 					room.takenChoices = make(map[string]string)
 				}
 				room.mu.Unlock()
-			case models.ReadyStatusMessage:
+			case models.ReadyStatusMessageType:
 				status, _ := msg.Payload["status"].(bool)
 				room.mu.Lock()
 				room.players[player.ID].IsReady = status
 
 				// Broadcast lobby change
-				room.broadcast(models.Message{Type: models.LobbyDataMessage, Payload: map[string]any{
+				room.broadcastLocked(models.Message{Type: models.LobbyDataMessageType, Payload: map[string]any{
 					"players": room.playersSummary(),
 				}})
 
@@ -183,17 +192,18 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				if allReady && room.stage == "lobby" {
 					room.stage = "gameStarted"
 					// Broadcast lobby change
-					room.broadcast(models.Message{Type: "gameStage", Payload: map[string]any{
+					room.broadcastLocked(models.Message{Type: models.GameStageMessageType, Payload: map[string]any{
 						"stage": "gameStarted",
 					}})
 				}
 				room.mu.Unlock()
-			case "addCharacter":
+			case models.AddCharacterMessageType:
 				room.mu.Lock()
 				room.players[player.ID].Characters = append(room.players[player.ID].Characters, models.Character{Pos: models.Coordinate{X: 0, Y: 0}, Rotation: 0})
+				room.mu.Unlock()
 
-			case "ping":
-				_ = conn.WriteJSON(models.Message{Type: "pong", Payload: msg.Payload})
+			case models.PingMessageType:
+				_ = conn.WriteJSON(models.Message{Type: models.PongMessageType, Payload: msg.Payload})
 			}
 		}
 	}()

@@ -2,36 +2,16 @@ import { useState } from "react";
 import Game from "./components/Game/Map";
 import { WebsocketConnection } from "./websocket/websocket";
 import { useGameState } from "./hooks/gameState";
-import { ReadyStatusMessage } from "../../types/generated";
+import { sendMessage } from "./websocket/messageSender";
 
 const Home = () => {
-
   const [readyStatus, setReadyStatus] = useState(false);
-
   const [playerName, setPlayerName] = useState("");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const onMessage = (evt: MessageEvent<any>) => {
-  //   const msg: ServerMessage = JSON.parse(evt.data);
-  //   switch (msg.type) {
-  //     case "joined":
-  //       console.log(msg.payload.playerId);
-  //       setLog((l) => [`Joined as Player ${msg.payload.playerId}`, ...l]);
-  //       break;
-  //     case "lobbyData":
-  //       setLobbyData(msg.payload.players);
-  //       break;
-  //     case "gameStage":
-  //       setGameStage(msg.payload.stage);
-  //       console.log("game stage:", gameStage);
-  //       break;
-  //     case "error":
-  //       setLog((l) => [String(msg.payload?.message ?? "error"), ...l]);
-  //       break;
-  //   }
-  // };
-
-  const {state: {lobbyData, gameStage}, onMessage} = useGameState()
+  const {
+    state: { lobbyData, gameStage },
+    onMessage,
+  } = useGameState();
 
   const { status, wsRef, connect } = WebsocketConnection({
     playerName,
@@ -42,13 +22,7 @@ const Home = () => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const newReadyState = !readyStatus;
-    ws.send(
-      JSON.stringify({
-        type: ReadyStatusMessage,
-        payload: { status: newReadyState },
-        timestamp: Date.now(),
-      })
-    );
+    sendMessage(ws, { type: "READY_STATUS", payload: { status: newReadyState } });
     setReadyStatus(newReadyState);
   };
 

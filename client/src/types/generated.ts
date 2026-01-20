@@ -4,16 +4,52 @@
 // source: models.go
 
 export type MessageType = string;
+/**
+ * Client message types (received by server from client)
+ */
+export const JoinMessageType: MessageType = "JOIN";
+/**
+ * Client message types (received by server from client)
+ */
 export const ReadyStatusMessageType: MessageType = "READY_STATUS";
-export const LobbyDataMessageType: MessageType = "LOBBY_DATA";
-export const GameStageMessageType: MessageType = "GAME_STAGE";
+/**
+ * Client message types (received by server from client)
+ */
+export const AddCharacterMessageType: MessageType = "ADD_CHARACTER";
+/**
+ * Client message types (received by server from client)
+ */
+export const ChooseMessageType: MessageType = "CHOOSE";
+/**
+ * Client message types (received by server from client)
+ */
+export const PingMessageType: MessageType = "PING";
+/**
+ * Server message types (sent by server to client)
+ */
 export const JoinedMessageType: MessageType = "JOINED";
+/**
+ * Server message types (sent by server to client)
+ */
+export const LobbyDataMessageType: MessageType = "LOBBY_DATA";
+/**
+ * Server message types (sent by server to client)
+ */
+export const GameStageMessageType: MessageType = "GAME_STAGE";
+/**
+ * Server message types (sent by server to client)
+ */
+export const ErrorMessageType: MessageType = "ERROR";
+/**
+ * Server message types (sent by server to client)
+ */
+export const PongMessageType: MessageType = "PONG";
 export interface Message {
   type: MessageType;
   payload: { [key: string]: any};
   timestamp: number /* int64 */;
 }
-export interface PlayerData {
+export interface Player {
   id: string;
   name: string;
   isReady: boolean;
@@ -28,34 +64,68 @@ export interface Coordinate {
   y: number /* int16 */;
 }
 /**
- * Server message types
+ * Client message structs (sent from client to server)
  */
-export interface BaseServerMessage {
-  timestamp: number /* int64 */;
-  type: MessageType;
+export interface JoinMessage {
+  type: 'JOIN';
+  payload: {
+    playerName: string;
+  };
+}
+export interface ReadyStatusMessage {
+  type: 'READY_STATUS';
+  payload: {
+    status: boolean;
+  };
+}
+export interface AddCharacterMessage {
+  type: 'ADD_CHARACTER';
+  payload: {
+    character: Character;
+  };
+}
+export interface ChooseMessage {
+  type: 'CHOOSE';
+  payload: {
+    choice: string; // "heads" or "tails"
+  };
+}
+export interface PingMessage {
+  type: 'PING';
+  payload: {
+  };
 }
 export interface JoinedMessage {
   timestamp: number /* int64 */;
-  type: 'joined';
+  type: 'JOINED';
   payload: {
     playerId: number /* int */;
   };
 }
 export interface LobbyDataMessage {
-  BaseServerMessage: BaseServerMessage;
+  timestamp: number /* int64 */;
+  type: 'LOBBY_DATA';
   payload: {
-    players: PlayerData[];
+    players: Player[];
   };
 }
 export interface GameStageMessage {
-  BaseServerMessage: BaseServerMessage;
+  timestamp: number /* int64 */;
+  type: 'GAME_STAGE';
   payload: {
     stage: string;
   };
 }
 export interface ErrorMessage {
-  BaseServerMessage: BaseServerMessage;
+  timestamp: number /* int64 */;
+  type: 'ERROR';
   payload: {
     message: string;
+  };
+}
+export interface PongMessage {
+  timestamp: number /* int64 */;
+  type: 'PONG';
+  payload: {
   };
 }

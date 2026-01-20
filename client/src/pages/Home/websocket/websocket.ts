@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
+import { sendMessage } from "./messageSender";
 
 interface WebsocketConnectProps {
   playerName: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onMessage: (evt: MessageEvent<any>) => void;
+  onMessage: (evt: MessageEvent) => void;
 }
 
 export const WebsocketConnection = ({
@@ -24,8 +24,7 @@ export const WebsocketConnection = ({
     ws.onopen = () => {
       setStatus("connected");
       // Send join as first message
-      const join = { type: "join", payload: { playerName } };
-      ws.send(JSON.stringify(join));
+      sendMessage(ws, { type: "JOIN", payload: { playerName } });
     };
     ws.onclose = () => setStatus("disconnected");
     ws.onerror = () => setStatus("disconnected");

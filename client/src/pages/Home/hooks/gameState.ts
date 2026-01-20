@@ -1,64 +1,62 @@
 import { useReducer } from "react";
-import { GameStageMessageType, LobbyDataMessageType, type PlayerData } from "../../../types/generated";
+import type { Player } from "../../../types/generated";
 import type { ServerMessage } from "../../../types/serverMessages";
 
 interface GameState {
-  lobbyData: PlayerData[];
-  gameStage: string
-}
-
-interface GameAction {
-  type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: any
+  playerId: number | null;
+  lobbyData: Player[];
+  gameStage: string;
 }
 
 const initialGameState: GameState = {
+  playerId: null,
   lobbyData: [],
-  gameStage: 'lobby'
+  gameStage: "lobby",
 };
 
-function reducer(state: GameState, action: GameAction) {
-  switch (action.type) {
-    case LobbyDataMessageType: {
+function reducer(state: GameState, message: ServerMessage): GameState {
+  switch (message.type) {
+    case "JOINED":
       return {
         ...state,
-        lobbyData: action.payload,
+        playerId: message.payload.playerId,
       };
-    }
-    case GameStageMessageType: {
-        return {
-            ...state,
-            gameStage: action.payload
-        }
-    }
-  }
 
-  throw Error("Unknown action");
+    case "LOBBY_DATA":
+      return {
+        ...state,
+        lobbyData: message.payload.players,
+      };
+
+    case "GAME_STAGE":
+      return {
+        ...state,
+        gameStage: message.payload.stage,
+      };
+
+    case "ERROR":
+      // Handle errors (could log, show toast, etc.)
+      console.error("Server error:", message.payload.message);
+      return state;
+
+    case "PONG":
+      // Handle pong if needed
+      return state;
+
+    default:
+      // TypeScript ensures this is exhaustive
+      const _exhaustive: never = message;
+      console.warn("Unhandled message type:", _exhaustive);
+      return state;
+  }
 }
 
 export const useGameState = () => {
-
   const [state, dispatch] = useReducer(reducer, initialGameState);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onMessage = (evt: MessageEvent<any>) => {
+  const onMessage = (evt: MessageEvent) => {
     const msg: ServerMessage = JSON.parse(evt.data);
-    dispatch({type: msg.type, payload: msg.payload})
-    // switch (msg.type) {
-    //   case "joined":
-    //     console.log("joined", msg.payload.playerId);
-    //     break;
-    //   case LobbyDataMessage:
-    //     setLobbyData(msg.payload.players);
-    //     break;
-    //   case "gameStage":
-    //     setGameStage(msg.payload.stage);
-    //     console.log("game stage:", gameStage);
-    //     break;
-    //   case "error":
-    //     break;
-    // }
+    dispatch(msg);
   };
 
   return { onMessage, state };
