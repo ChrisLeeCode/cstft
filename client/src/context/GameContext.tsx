@@ -13,13 +13,13 @@ import type { ClientMessage } from "../types/clientMessages";
 
 // Game State
 interface GameState {
-  playerId: number | null;
+  playerId: string;
   lobbyData: Player[];
   gameStage: string;
 }
 
 const initialGameState: GameState = {
-  playerId: null,
+  playerId: "",
   lobbyData: [],
   gameStage: "lobby",
 };

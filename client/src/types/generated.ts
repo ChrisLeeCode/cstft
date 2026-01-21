@@ -44,6 +44,18 @@ export const ErrorMessageType: MessageType = "ERROR";
  * Server message types (sent by server to client)
  */
 export const PongMessageType: MessageType = "PONG";
+/**
+ * Server message types (sent by server to client)
+ */
+export const WaitingMessageType: MessageType = "WAITING";
+/**
+ * Server message types (sent by server to client)
+ */
+export const ChoiceUpdateMessageType: MessageType = "CHOICE_UPDATE";
+/**
+ * Server message types (sent by server to client)
+ */
+export const ResultMessageType: MessageType = "RESULT";
 export interface Message {
   type: MessageType;
   payload: { [key: string]: any};
@@ -99,7 +111,7 @@ export interface JoinedMessage {
   timestamp: number /* int64 */;
   type: 'JOINED';
   payload: {
-    playerId: number /* int */;
+    playerId: string;
   };
 }
 export interface LobbyDataMessage {

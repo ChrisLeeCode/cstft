@@ -6,23 +6,26 @@ type Pos = {
 
 export interface CharacterProps {
   pos: Pos;
+  isFriendly: boolean
   rotation?: number
+  
 }
 
-const Character = ({ pos, rotation = 0 }: CharacterProps) => {
+const Character = ({ pos, isFriendly, rotation = 0 }: CharacterProps) => {
   return (
     <div
-      className="absolute border border-red-500"
+      className="absolute border"
       style={{
         height: cellHeight,
         width: cellWidth,
         marginLeft: cellWidth * pos.x,
         marginTop: cellHeight * pos.y,
+        borderColor: isFriendly ? 'green' : 'red' 
       }}
     >
       <div
-        className="border w-full h-full flex items-center justify-center"
-        style={{ rotate: `${rotation}deg` }}
+        className="w-full h-full flex items-center justify-center"
+        style={{ rotate: `${rotation}deg`}}
       >
         {`->`}
       </div>

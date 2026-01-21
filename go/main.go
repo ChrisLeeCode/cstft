@@ -121,7 +121,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			// Close connection if there is an error reading message
 			if err := conn.ReadJSON(&msg); err != nil {
 				if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-					log.Println("client closed")
+					log.Println("client closed", err)
+					room.removeConn(conn)
 				} else {
 					log.Println("read error:", err)
 				}
@@ -183,13 +184,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 				// If all players have readied up - move the game state to "gameStarted"
 				allReady := true
+				log.Println("checking if all players ready")
 				for _, player := range room.players {
+					log.Println("player:", player)
 					if !player.IsReady {
 						allReady = false
 					}
 				}
 
-				if allReady && room.stage == "lobby" {
+				if allReady {
 					room.stage = "gameStarted"
 					// Broadcast lobby change
 					room.broadcastLocked(models.Message{Type: models.GameStageMessageType, Payload: map[string]any{

@@ -21,7 +21,7 @@ func CreatePlayer(join models.Message, conn *websocket.Conn) (*models.Player, er
 		return nil, errors.New("error extracting player name from payload")
 	}
 
-	return &models.Player{ID: playerID, Conn: conn, Name: playerName}, nil
+	return &models.Player{ID: playerID, Conn: conn, Name: playerName, Characters: make([]models.Character, 0)}, nil
 }
 
 func JoinHandshake(conn *websocket.Conn) (models.Message, error) {

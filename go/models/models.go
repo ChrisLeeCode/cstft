@@ -89,7 +89,7 @@ type JoinedMessage struct {
 	Timestamp int64       `json:"timestamp"`
 	Type      MessageType `json:"type" tstype:"'JOINED'"`
 	Payload   struct {
-		PlayerID int `json:"playerId"`
+		PlayerID string `json:"playerId"`
 	} `json:"payload"`
 }
 

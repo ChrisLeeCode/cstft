@@ -1,15 +1,17 @@
-import { useState } from "react";
-import Character, { type CharacterProps } from "../Character/Character";
+import { useMemo} from "react";
+import Character from "../Character/Character";
 import Visual from "./Visual";
 import { useGame } from "../../../../context/GameContext";
 
 const Game = () => {
-  const { sendMessage } = useGame();
-  const [characters, setCharacters] = useState<CharacterProps[]>([])
+  const { sendMessage, state } = useGame();
+
+  const characters = useMemo(() => {
+    return state.lobbyData.flatMap((playerData) => playerData.characters.map((char) => ({...char, isFriendly: playerData.id === state.playerId})))
+  }, [state.lobbyData])
 
   const handleAddCharacterClick = () => {
     sendMessage({ type: 'ADD_CHARACTER', payload: { character: { pos: { x: 0, y: 0 }, rotation: 45 } } })
-    // setCharacters((prev) => [...prev, {pos: {x: prev.length, y: prev.length}}])
   }
   return (
     <div>
