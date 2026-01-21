@@ -14,6 +14,7 @@ const initialGameState: GameState = {
   gameStage: "lobby",
 };
 
+// Handles incoming messages from the server
 function reducer(state: GameState, message: ServerMessage): GameState {
   switch (message.type) {
     case "JOINED":

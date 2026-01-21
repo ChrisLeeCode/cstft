@@ -15,14 +15,14 @@ const (
 
 // Server message types (sent by server to client)
 const (
-	JoinedMessageType      MessageType = "JOINED"
-	LobbyDataMessageType   MessageType = "LOBBY_DATA"
-	GameStageMessageType   MessageType = "GAME_STAGE"
-	ErrorMessageType       MessageType = "ERROR"
-	PongMessageType        MessageType = "PONG"
-	WaitingMessageType     MessageType = "WAITING"
+	JoinedMessageType       MessageType = "JOINED"
+	LobbyDataMessageType    MessageType = "LOBBY_DATA"
+	GameStageMessageType    MessageType = "GAME_STAGE"
+	ErrorMessageType        MessageType = "ERROR"
+	PongMessageType         MessageType = "PONG"
+	WaitingMessageType      MessageType = "WAITING"
 	ChoiceUpdateMessageType MessageType = "CHOICE_UPDATE"
-	ResultMessageType      MessageType = "RESULT"
+	ResultMessageType       MessageType = "RESULT"
 )
 
 type Message struct {

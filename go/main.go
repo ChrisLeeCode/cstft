@@ -57,7 +57,7 @@ func (gr *GameRoom) broadcast(msg models.Message) {
 func (gr *GameRoom) playersSummary() []map[string]any {
 	res := make([]map[string]any, 0, len(gr.players))
 	for _, p := range gr.players {
-		res = append(res, map[string]any{"id": p.ID, "name": p.Name, "isReady": p.IsReady})
+		res = append(res, map[string]any{"id": p.ID, "name": p.Name, "isReady": p.IsReady, "characters": p.Characters})
 	}
 	return res
 }
@@ -101,7 +101,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}})
 
 	// Broadcast lobby change
-	room.broadcastLocked(models.Message{Type: models.LobbyDataMessageType, Payload: map[string]any{
+	room.broadcast(models.Message{Type: models.LobbyDataMessageType, Payload: map[string]any{
 		"players": room.playersSummary(),
 	}})
 
@@ -200,6 +200,9 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			case models.AddCharacterMessageType:
 				room.mu.Lock()
 				room.players[player.ID].Characters = append(room.players[player.ID].Characters, models.Character{Pos: models.Coordinate{X: 0, Y: 0}, Rotation: 0})
+				room.broadcastLocked(models.Message{Type: models.LobbyDataMessageType, Payload: map[string]any{
+					"players": room.playersSummary(),
+				}})
 				room.mu.Unlock()
 
 			case models.PingMessageType:

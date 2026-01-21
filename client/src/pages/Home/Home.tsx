@@ -1,28 +1,18 @@
 import { useState } from "react";
 import Game from "./components/Game/Map";
-import { WebsocketConnection } from "./websocket/websocket";
-import { useGameState } from "./hooks/gameState";
-import { sendMessage } from "./websocket/messageSender";
+import { useGame } from "../../context/GameContext";
 
 const Home = () => {
   const [readyStatus, setReadyStatus] = useState(false);
   const [playerName, setPlayerName] = useState("");
 
-  const {
-    state: { lobbyData, gameStage },
-    onMessage,
-  } = useGameState();
+  const { state, status, connect, sendMessage } = useGame();
 
-  const { status, wsRef, connect } = WebsocketConnection({
-    playerName,
-    onMessage,
-  });
+  console.log("state in Home.tsx", state);
 
   const toggleReadyStatus = () => {
-    const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const newReadyState = !readyStatus;
-    sendMessage(ws, { type: "READY_STATUS", payload: { status: newReadyState } });
+    sendMessage({ type: "READY_STATUS", payload: { status: newReadyState } });
     setReadyStatus(newReadyState);
   };
 
@@ -40,7 +30,7 @@ const Home = () => {
               }}
               className="border mr-2 p-1 rounded"
             />
-            <button onClick={connect} className="border p-1 rounded">
+            <button onClick={() => connect(playerName)} className="border p-1 rounded">
               Connect
             </button>
           </div>
@@ -57,9 +47,9 @@ const Home = () => {
         )}
         <div>
           Lobby
-          {lobbyData.length > 0 ? (
+          {state.lobbyData.length > 0 ? (
             <div className="flex flex-col">
-              {lobbyData.map((data) => (
+              {state.lobbyData.map((data) => (
                 <div className="flex items-center">
                   <input
                     checked={data.isReady}
@@ -78,7 +68,7 @@ const Home = () => {
           )}
         </div>
       </div>
-      {gameStage === "gameStarted" && <Game />}
+      {state.gameStage === "gameStarted" && <Game />}
     </div>
   );
 };
